@@ -237,6 +237,16 @@
   .loading-text { color: #fff; font-size: 14px; font-weight: 700; }
 
   .hint { font-size: 11px; color: var(--subtext); margin-top: 4px; }
+
+  /* 手機 RWD */
+  @media (max-width: 480px) {
+    .content { padding: 12px; }
+    .card { padding: 16px; }
+    .form-row { grid-template-columns: 1fr; }
+    .flight-row { flex-direction: column !important; }
+    .form-input { font-size: 16px; } /* 防止 iOS 自動縮放 */
+    .form-select { font-size: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -292,7 +302,7 @@
       </div>
       <div class="form-field">
         <div class="form-label">去程航班編號（最多三個）</div>
-        <div style="display:flex; gap:8px;">
+        <div class="flight-row" style="display:flex; gap:8px;">
           <input class="form-input" id="flightNoDepart1" type="text" placeholder="第1選擇">
           <input class="form-input" id="flightNoDepart2" type="text" placeholder="第2選擇">
           <input class="form-input" id="flightNoDepart3" type="text" placeholder="第3選擇">
@@ -300,7 +310,7 @@
       </div>
       <div class="form-field">
         <div class="form-label">回程航班編號（最多三個）</div>
-        <div style="display:flex; gap:8px;">
+        <div class="flight-row" style="display:flex; gap:8px;">
           <input class="form-input" id="flightNoReturn1" type="text" placeholder="第1選擇">
           <input class="form-input" id="flightNoReturn2" type="text" placeholder="第2選擇">
           <input class="form-input" id="flightNoReturn3" type="text" placeholder="第3選擇">
