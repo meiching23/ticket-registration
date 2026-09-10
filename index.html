@@ -651,7 +651,10 @@ window.submitForm = async function() {
     await fetch('https://ticket-api-kohl.vercel.app/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: lineMsg })
+      body: JSON.stringify({
+        type: 'registration',
+        message: lineMsg
+      })
     });
 
     hideLoading();
