@@ -430,7 +430,23 @@ const VISION_API_KEY = 'AIzaSyC2z9aUdABqdxJElzJI8xDEX10QMcLtjho';
 let passengers = [];
 let passengerCount = 0;
 
+function savePassengerInputs() {
+  passengers.forEach(p => {
+    const nameZh = document.getElementById(`name-zh-${p.id}`);
+    const nameEn = document.getElementById(`name-en-${p.id}`);
+    const dob = document.getElementById(`dob-${p.id}`);
+    const passportNo = document.getElementById(`passport-no-${p.id}`);
+    const expiry = document.getElementById(`expiry-${p.id}`);
+    if (nameZh) p.savedNameZh = nameZh.value;
+    if (nameEn) p.savedNameEn = nameEn.value;
+    if (dob) p.savedDob = dob.value;
+    if (passportNo) p.savedPassportNo = passportNo.value;
+    if (expiry) p.savedExpiry = expiry.value;
+  });
+}
+
 function renderPassengers() {
+  savePassengerInputs();
   const list = document.getElementById('passengerList');
   if (passengers.length === 0) {
     list.innerHTML = '<div style="text-align:center;color:var(--subtext);font-size:12px;padding:12px 0;">請新增旅客 👇</div>';
@@ -480,9 +496,24 @@ function renderPassengers() {
       </div>
     </div>
   `).join('');
+
+  // 填回已儲存的資料
+  passengers.forEach(p => {
+    const nameZh = document.getElementById(`name-zh-${p.id}`);
+    const nameEn = document.getElementById(`name-en-${p.id}`);
+    const dob = document.getElementById(`dob-${p.id}`);
+    const passportNo = document.getElementById(`passport-no-${p.id}`);
+    const expiry = document.getElementById(`expiry-${p.id}`);
+    if (nameZh && p.savedNameZh) nameZh.value = p.savedNameZh;
+    if (nameEn && p.savedNameEn) nameEn.value = p.savedNameEn;
+    if (dob && p.savedDob) dob.value = p.savedDob;
+    if (passportNo && p.savedPassportNo) passportNo.value = p.savedPassportNo;
+    if (expiry && p.savedExpiry) expiry.value = p.savedExpiry;
+  });
 }
 
 window._removePassenger = function(id) {
+  savePassengerInputs();
   passengers = passengers.filter(p => p.id !== id);
   renderPassengers();
 }
@@ -606,6 +637,7 @@ function parseMRZ(text) {
 }
 
 window.addPassenger = function() {
+  savePassengerInputs();
   passengerCount++;
   const id = Date.now();
   passengers.push({ id, index: passengerCount });
