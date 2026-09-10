@@ -642,6 +642,7 @@ window.submitForm = async function() {
     returnTime: document.getElementById('returnTime').value,
     flightNoDepart: [document.getElementById('flightNoDepart1').value, document.getElementById('flightNoDepart2').value, document.getElementById('flightNoDepart3').value].filter(v => v),
     flightNoReturn: [document.getElementById('flightNoReturn1').value, document.getElementById('flightNoReturn2').value, document.getElementById('flightNoReturn3').value].filter(v => v),
+    cabinClass,
     remarks: document.getElementById('remarks').value,
     passengers: passengerData,
     passengerCount: passengers.length,
