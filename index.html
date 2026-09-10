@@ -307,6 +307,10 @@
         <div class="form-label">負責業務編號</div>
         <input class="form-input" id="agentNo" type="text" placeholder="例：A001">
       </div>
+      <div class="form-field">
+        <div class="form-label">備註</div>
+        <textarea class="form-input" id="remarks" rows="3" placeholder="特殊需求或其他備註" style="height:auto;padding:12px 14px;resize:vertical;"></textarea>
+      </div>
     </div>
   </div>
 
@@ -485,17 +489,20 @@ window._runOCR = async function(id) {
     const text = data.responses?.[0]?.fullTextAnnotation?.text || '';
     const parsed = parseMRZ(text);
     if (parsed) {
-      if (parsed.surname) { document.getElementById(`name-en-${id}`).value = `${parsed.surname} ${parsed.given}`; document.getElementById(`name-en-${id}`).classList.add('auto-filled'); }
-      if (parsed.passportNo) { document.getElementById(`passport-no-${id}`).value = parsed.passportNo; document.getElementById(`passport-no-${id}`).classList.add('auto-filled'); }
-      if (parsed.nationality) { document.getElementById(`nationality-${id}`).value = parsed.nationality; document.getElementById(`nationality-${id}`).classList.add('auto-filled'); }
-      if (parsed.dob) { document.getElementById(`dob-${id}`).value = parsed.dob; document.getElementById(`dob-${id}`).classList.add('auto-filled'); }
-      if (parsed.expiry) { document.getElementById(`expiry-${id}`).value = parsed.expiry; document.getElementById(`expiry-${id}`).classList.add('auto-filled'); }
-      if (parsed.gender) document.getElementById(`gender-${id}`).value = parsed.gender;
+      let filledCount = 0;
+      if (parsed.surname) { document.getElementById(`name-en-${id}`).value = `${parsed.surname} ${parsed.given}`; document.getElementById(`name-en-${id}`).classList.add('auto-filled'); filledCount++; }
+      if (parsed.passportNo) { document.getElementById(`passport-no-${id}`).value = parsed.passportNo; document.getElementById(`passport-no-${id}`).classList.add('auto-filled'); filledCount++; }
+      if (parsed.dob) { document.getElementById(`dob-${id}`).value = parsed.dob; document.getElementById(`dob-${id}`).classList.add('auto-filled'); filledCount++; }
+      if (parsed.expiry) { document.getElementById(`expiry-${id}`).value = parsed.expiry; document.getElementById(`expiry-${id}`).classList.add('auto-filled'); filledCount++; }
       result.style.display = 'block';
       result.style.background = '#f0f8e8';
       result.style.borderColor = '#90c870';
       result.style.color = '#3a6020';
-      result.innerHTML = '✅ 辨識成功！資料已自動填入，請確認是否正確。';
+      if (filledCount >= 2) {
+        result.innerHTML = `✅ 辨識成功！已自動填入 ${filledCount} 個欄位，請確認並補填剩餘資料。`;
+      } else {
+        result.innerHTML = '⚠️ 部分辨識，請手動確認並補填所有欄位。';
+      }
     } else {
       result.style.display = 'block';
       result.style.background = '#fce8e6';
@@ -518,26 +525,49 @@ function parseMRZ(text) {
   const lines = text.split('\n').map(l => l.replace(/\s/g, '').toUpperCase());
   let mrz1 = '', mrz2 = '';
   for (const line of lines) {
-    if (line.startsWith('P<') && line.length >= 40) mrz1 = line;
-    if (/^[A-Z0-9<]{9}[0-9]/.test(line) && line.length >= 40) mrz2 = line;
+    if (line.startsWith('P<') && line.length >= 30) mrz1 = line;
+    if (/^[A-Z0-9<]{9}[0-9]/.test(line) && line.length >= 30) mrz2 = line;
   }
-  if (!mrz1 || !mrz2) return null;
-  try {
-    const namePart = mrz1.substring(5).split('<<');
-    const surname = namePart[0]?.replace(/</g, ' ').trim() || '';
-    const given = namePart[1]?.replace(/</g, ' ').trim() || '';
-    const passportNo = mrz2.substring(0, 9).replace(/</g, '');
-    const nationality = mrz2.substring(10, 13).replace(/</g, '');
-    const dobRaw = mrz2.substring(13, 19);
-    const gender = mrz2.substring(20, 21);
-    const expiryRaw = mrz2.substring(21, 27);
-    const parseDateMRZ = (str, isFuture) => {
-      const yy = str.substring(0, 2), mm = str.substring(2, 4), dd = str.substring(4, 6);
-      const year = isFuture ? (parseInt(yy) < 50 ? `20${yy}` : `19${yy}`) : (parseInt(yy) > 24 ? `19${yy}` : `20${yy}`);
-      return `${year}-${mm}-${dd}`;
-    };
-    return { surname, given, passportNo, nationality, dob: parseDateMRZ(dobRaw, false), expiry: parseDateMRZ(expiryRaw, true), gender: gender === 'M' ? 'M' : gender === 'F' ? 'F' : '' };
-  } catch(e) { return null; }
+
+  const result = { surname: '', given: '', passportNo: '', dob: '', expiry: '', nationality: '', gender: '' };
+  let hasAny = false;
+
+  if (mrz1) {
+    try {
+      const namePart = mrz1.substring(5).split('<<');
+      result.surname = namePart[0]?.replace(/</g, ' ').trim() || '';
+      result.given = namePart[1]?.replace(/</g, ' ').trim() || '';
+      if (result.surname) hasAny = true;
+    } catch(e) {}
+  }
+
+  if (mrz2) {
+    try {
+      const parseDateMRZ = (str, isFuture) => {
+        if (!str || str.includes('<')) return '';
+        const yy = str.substring(0, 2), mm = str.substring(2, 4), dd = str.substring(4, 6);
+        const year = isFuture ? (parseInt(yy) < 50 ? `20${yy}` : `19${yy}`) : (parseInt(yy) > 24 ? `19${yy}` : `20${yy}`);
+        return `${year}-${mm}-${dd}`;
+      };
+      result.passportNo = mrz2.substring(0, 9).replace(/</g, '') || '';
+      result.nationality = mrz2.substring(10, 13).replace(/</g, '') || '';
+      result.dob = parseDateMRZ(mrz2.substring(13, 19), false);
+      result.gender = mrz2.substring(20, 21);
+      result.expiry = parseDateMRZ(mrz2.substring(21, 27), true);
+      if (result.passportNo) hasAny = true;
+    } catch(e) {}
+  }
+
+  // 如果沒有 MRZ 但有文字，嘗試從文字中找護照號碼
+  if (!hasAny) {
+    const passportMatch = text.match(/[A-Z]{1,2}[0-9]{7,9}/);
+    if (passportMatch) {
+      result.passportNo = passportMatch[0];
+      hasAny = true;
+    }
+  }
+
+  return hasAny ? result : null;
 }
 
 window.addPassenger = function() {
@@ -584,7 +614,7 @@ window.submitForm = async function() {
     returnDate: document.getElementById('returnDate').value,
     flightNoDepart: [document.getElementById('flightNoDepart1').value, document.getElementById('flightNoDepart2').value, document.getElementById('flightNoDepart3').value].filter(v => v),
     flightNoReturn: [document.getElementById('flightNoReturn1').value, document.getElementById('flightNoReturn2').value, document.getElementById('flightNoReturn3').value].filter(v => v),
-    cabinClass,
+    remarks: document.getElementById('remarks').value,
     passengers: passengerData,
     passengerCount: passengers.length,
   };
@@ -592,7 +622,7 @@ window.submitForm = async function() {
   try {
     await window._firebasePush(window._firebaseRef(db, 'registrations'), record);
 
-    const lineMsg = `✈️ 新開票登記\n━━━━━━━━━━━━━\n📋 專案：${projectNo || '未填'}\n🧑‍💼 負責業務：${record.agentNo || '未填'}\n👤 訂購人：${contactName}\n📱 電話：${contactPhone}\n💬 LINE ID：${record.contactLine || '未填'}\n💬 LINE 名稱：${record.contactLineName || '未填'}\n🛫 ${departure} → ${destination}\n📅 去程：${departDate}　航班：${record.flightNoDepart.join(' / ') || '未填'}\n📅 回程：${record.returnDate || '未填'}　航班：${record.flightNoReturn.join(' / ') || '未填'}\n💺 艙等：${cabinClass}\n👥 旅客數：${passengers.length} 人\n\n旅客：\n${passengerData.map(p => `${p.index}. ${p.nameZh || ''} ${p.nameEn || '未填'} | 生日：${p.dob || '未填'} | 護照：${p.passportNo || '未填'} | 效期：${p.expiry || '未填'}`).join('\n')}`;
+    const lineMsg = `✈️ 新開票登記\n━━━━━━━━━━━━━\n📋 專案：${projectNo || '未填'}\n🧑‍💼 負責業務：${record.agentNo || '未填'}\n👤 訂購人：${contactName}\n📱 電話：${contactPhone}\n💬 LINE ID：${record.contactLine || '未填'}\n💬 LINE 名稱：${record.contactLineName || '未填'}\n🛫 ${departure} → ${destination}\n📅 去程：${departDate}　航班：${record.flightNoDepart.join(' / ') || '未填'}\n📅 回程：${record.returnDate || '未填'}　航班：${record.flightNoReturn.join(' / ') || '未填'}\n💺 艙等：${cabinClass}\n👥 旅客數：${passengers.length} 人\n\n旅客：\n${passengerData.map(p => `${p.index}. ${p.nameZh || ''} ${p.nameEn || '未填'} | 生日：${p.dob || '未填'} | 護照：${p.passportNo || '未填'} | 效期：${p.expiry || '未填'}`).join('\n')}${record.remarks ? '\n\n📝 備註：' + record.remarks : ''}`;
 
     await fetch('https://ticket-api-kohl.vercel.app/api/notify', {
       method: 'POST',
