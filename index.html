@@ -430,7 +430,7 @@ function renderPassengers() {
           <div class="upload-text"><strong>點擊上傳護照照片</strong><br>支援拍照或選擇檔案</div>
         </div>
       </div>
-      <input type="file" id="input-${p.id}" accept="image/*" capture="environment" onchange="window._handlePassportUpload(${p.id}, this)">
+      <input type="file" id="input-${p.id}" accept="image/*" onchange="window._handlePassportUpload(${p.id}, this)">
       <button class="ocr-btn" id="ocr-btn-${p.id}" onclick="window._runOCR(${p.id})">🔍 自動辨識護照資料</button>
       <div class="ocr-result" id="ocr-result-${p.id}"></div>
       <div class="form-grid" style="margin-top:14px;">
