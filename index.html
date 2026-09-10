@@ -625,6 +625,14 @@ window.submitForm = async function() {
   try {
     await window._firebasePush(window._firebaseRef(db, 'registrations'), record);
 
+    // 存到 Google Sheet
+    await fetch('https://script.google.com/macros/s/AKfycbx82qP9c24F7ckG-ioO-351-5STq7vARjknMlR5uifcXgikH0rctPivswtAd_f5GPmL/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+
     const lineMsg = `✈️ 新開票登記\n━━━━━━━━━━━━━\n📋 專案：${projectNo || '未填'}\n🧑‍💼 負責業務：${record.agentNo || '未填'}\n👤 訂購人：${contactName}\n📱 電話：${contactPhone}\n💬 LINE ID：${record.contactLine || '未填'}\n💬 LINE 名稱：${record.contactLineName || '未填'}\n🛫 ${departure} → ${destination}\n📅 去程：${departDate}　航班：${record.flightNoDepart.join(' / ') || '未填'}\n📅 回程：${record.returnDate || '未填'}　航班：${record.flightNoReturn.join(' / ') || '未填'}\n💺 艙等：${cabinClass}\n👥 旅客數：${passengers.length} 人\n\n旅客：\n${passengerData.map(p => `${p.index}. ${p.nameZh || ''} ${p.nameEn || '未填'} | 生日：${p.dob || '未填'} | 護照：${p.passportNo || '未填'} | 效期：${p.expiry || '未填'}`).join('\n')}${record.remarks ? '\n\n📝 備註：' + record.remarks : ''}`;
 
     await fetch('https://ticket-api-kohl.vercel.app/api/notify', {
