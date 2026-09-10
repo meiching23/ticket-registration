@@ -416,22 +416,12 @@ function renderPassengers() {
       <div class="form-grid" style="margin-top:14px;">
         <div class="form-row">
           <div class="form-field">
-            <div class="form-label">英文姓名（護照上）</div>
-            <input class="form-input" id="name-en-${p.id}" type="text" placeholder="SURNAME GIVEN NAME">
-          </div>
-          <div class="form-field">
             <div class="form-label">中文姓名</div>
             <input class="form-input" id="name-zh-${p.id}" type="text" placeholder="中文姓名">
           </div>
-        </div>
-        <div class="form-row">
           <div class="form-field">
-            <div class="form-label">護照號碼</div>
-            <input class="form-input" id="passport-no-${p.id}" type="text" placeholder="護照號碼">
-          </div>
-          <div class="form-field">
-            <div class="form-label">國籍</div>
-            <input class="form-input" id="nationality-${p.id}" type="text" placeholder="TWN">
+            <div class="form-label">英文姓名（護照上）</div>
+            <input class="form-input" id="name-en-${p.id}" type="text" placeholder="SURNAME GIVEN NAME">
           </div>
         </div>
         <div class="form-row">
@@ -440,17 +430,13 @@ function renderPassengers() {
             <input class="form-input" id="dob-${p.id}" type="date">
           </div>
           <div class="form-field">
-            <div class="form-label">護照效期</div>
-            <input class="form-input" id="expiry-${p.id}" type="date">
+            <div class="form-label">護照號碼</div>
+            <input class="form-input" id="passport-no-${p.id}" type="text" placeholder="護照號碼">
           </div>
         </div>
         <div class="form-field">
-          <div class="form-label">性別</div>
-          <select class="form-select" id="gender-${p.id}">
-            <option value="">請選擇</option>
-            <option value="M">男 M</option>
-            <option value="F">女 F</option>
-          </select>
+          <div class="form-label">護照效期</div>
+          <input class="form-input" id="expiry-${p.id}" type="date">
         </div>
       </div>
     </div>
