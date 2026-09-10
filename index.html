@@ -299,8 +299,18 @@
           <input class="form-input" id="departDate" type="date">
         </div>
         <div class="form-field">
+          <div class="form-label">去程出發時間</div>
+          <input class="form-input" id="departTime" type="time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
           <div class="form-label">回程日期</div>
           <input class="form-input" id="returnDate" type="date">
+        </div>
+        <div class="form-field">
+          <div class="form-label">回程出發時間</div>
+          <input class="form-input" id="returnTime" type="time">
         </div>
       </div>
       <div class="form-field">
@@ -627,7 +637,9 @@ window.submitForm = async function() {
     departure,
     destination,
     departDate,
+    departTime: document.getElementById('departTime').value,
     returnDate: document.getElementById('returnDate').value,
+    returnTime: document.getElementById('returnTime').value,
     flightNoDepart: [document.getElementById('flightNoDepart1').value, document.getElementById('flightNoDepart2').value, document.getElementById('flightNoDepart3').value].filter(v => v),
     flightNoReturn: [document.getElementById('flightNoReturn1').value, document.getElementById('flightNoReturn2').value, document.getElementById('flightNoReturn3').value].filter(v => v),
     remarks: document.getElementById('remarks').value,
@@ -646,7 +658,7 @@ window.submitForm = async function() {
       body: JSON.stringify(record)
     });
 
-    const lineMsg = `✈️ 新開票登記\n━━━━━━━━━━━━━\n📋 專案：${projectNo || '未填'}\n🧑‍💼 負責業務：${record.agentNo || '未填'}\n👤 訂購人：${contactName}\n📱 電話：${contactPhone}\n💬 LINE ID：${record.contactLine || '未填'}\n💬 LINE 名稱：${record.contactLineName || '未填'}\n🛫 ${departure} → ${destination}\n📅 去程：${departDate}　航班：${record.flightNoDepart.join(' / ') || '未填'}\n📅 回程：${record.returnDate || '未填'}　航班：${record.flightNoReturn.join(' / ') || '未填'}\n💺 艙等：${cabinClass}\n👥 旅客數：${passengers.length} 人\n\n旅客：\n${passengerData.map(p => `${p.index}. ${p.nameZh || ''} ${p.nameEn || '未填'} | 生日：${p.dob || '未填'} | 護照：${p.passportNo || '未填'} | 效期：${p.expiry || '未填'}`).join('\n')}${record.remarks ? '\n\n📝 備註：' + record.remarks : ''}`;
+    const lineMsg = `✈️ 新開票登記\n━━━━━━━━━━━━━\n📋 專案：${projectNo || '未填'}\n🧑‍💼 負責業務：${record.agentNo || '未填'}\n👤 訂購人：${contactName}\n📱 電話：${contactPhone}\n💬 LINE ID：${record.contactLine || '未填'}\n💬 LINE 名稱：${record.contactLineName || '未填'}\n━━━━━━━━━━━━━\n🛫 ${departure} → ${destination}\n📅 去程日期：${departDate}\n🕐 去程時間：${record.departTime || '未填'}\n✈️ 去程航班：${record.flightNoDepart.join(' / ') || '未填'}\n📅 回程日期：${record.returnDate || '未填'}\n🕐 回程時間：${record.returnTime || '未填'}\n✈️ 回程航班：${record.flightNoReturn.join(' / ') || '未填'}\n💺 艙等：${cabinClass}\n━━━━━━━━━━━━━\n👥 旅客數：${passengers.length} 人\n${passengerData.map(p => `\n旅客 ${p.index}：\n　姓名：${p.nameZh || '未填'} ${p.nameEn || ''}\n　生日：${p.dob || '未填'}\n　護照：${p.passportNo || '未填'}\n　效期：${p.expiry || '未填'}`).join('\n')}${record.remarks ? '\n━━━━━━━━━━━━━\n📝 備註：' + record.remarks : ''}`;
 
     await fetch('https://ticket-api-kohl.vercel.app/api/notify', {
       method: 'POST',
