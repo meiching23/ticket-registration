@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>開票登記系統 — FlyLight Travel Lab</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --cream: #fdf8f0;
+    --bg: #ede5d8;
+    --brown: #c87830;
+    --dark-brown: #7a4a18;
+    --light-brown: #e8c898;
+    --text: #3a2008;
+    --subtext: #9a6030;
+    --border: #e8d8c0;
+    --success: #5a8a40;
+    --error: #c84030;
+  }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 0 0 40px;
+  }
+
+  .top-bar {
+    background: var(--brown);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(100,50,0,0.2);
+  }
+  .top-bar-brand { color: #fff8ee; font-size: 15px; font-weight: 900; letter-spacing: 1px; }
+  .top-bar-sub { color: rgba(255,248,238,0.6); font-size: 10px; }
+
+  .content { padding: 20px; max-width: 640px; margin: 0 auto; }
+
+  .card {
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 16px;
+    border: 1.5px solid var(--light-brown);
+  }
+
+  .card-title {
+    font-size: 14px; font-weight: 800;
+    color: var(--dark-brown);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  /* 護照上傳區 */
+  .passport-upload {
+    border: 2px dashed var(--light-brown);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    background: #fff8ee;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .passport-upload:hover { border-color: var(--brown); background: #fef5e6; }
+  .passport-upload.has-image { border-style: solid; border-color: var(--brown); }
+  .upload-icon { font-size: 40px; margin-bottom: 10px; }
+  .upload-text { font-size: 13px; color: var(--subtext); line-height: 1.6; }
+  .upload-text strong { color: var(--dark-brown); }
+  #passportInput { display: none; }
+  #passportPreview {
+    width: 100%; border-radius: 10px;
+    margin-bottom: 12px; display: none;
+    max-height: 200px; object-fit: cover;
+  }
+
+  /* OCR 結果 */
+  .ocr-btn {
+    width: 100%; padding: 12px;
+    background: var(--brown); color: #fff8ee;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    margin-top: 12px;
+    display: none;
+    transition: background 0.2s;
+  }
+  .ocr-btn:hover { background: var(--dark-brown); }
+  .ocr-btn:disabled { background: #d4b080; cursor: not-allowed; }
+
+  .ocr-result {
+    background: #f0f8e8;
+    border: 1.5px solid #90c870;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #3a6020;
+    display: none;
+  }
+
+  /* 表單欄位 */
+  .form-grid { display: flex; flex-direction: column; gap: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field.full { grid-column: 1 / -1; }
+  .form-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--subtext); letter-spacing: 1px;
+  }
+  .form-input {
+    height: 42px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: #fff8ee;
+    padding: 0 14px;
+    font-size: 13.5px; color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--brown); }
+  .form-input.auto-filled { background: #f0f8e8; border-color: #90c870; }
+  .form-select {
+    height: 42px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: #fff8ee;
+    padding: 0 14px;
+    font-size: 13.5px; color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .form-select:focus { border-color: var(--brown); }
+
+  /* 新增旅客按鈕 */
+  .add-passenger-btn {
+    width: 100%; padding: 12px;
+    background: transparent;
+    border: 2px dashed var(--light-brown);
+    border-radius: 12px;
+    color: var(--subtext);
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .add-passenger-btn:hover { background: var(--cream); border-color: var(--brown); color: var(--brown); }
+
+  /* 旅客卡片 */
+  .passenger-card {
+    background: #fef5ea;
+    border: 1.5px solid var(--light-brown);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .passenger-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .passenger-title { font-size: 13px; font-weight: 800; color: var(--dark-brown); }
+  .remove-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--subtext); font-size: 18px;
+  }
+  .remove-btn:hover { color: var(--error); }
+
+  /* 提交按鈕 */
+  .submit-btn {
+    width: 100%; padding: 16px;
+    background: var(--brown); color: #fff8ee;
+    border: none; border-radius: 14px;
+    font-size: 16px; font-weight: 900;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    letter-spacing: 2px;
+    transition: background 0.2s;
+    margin-top: 8px;
+  }
+  .submit-btn:hover { background: var(--dark-brown); }
+  .submit-btn:disabled { background: #d4b080; cursor: not-allowed; }
+
+  /* 成功訊息 */
+  .success-msg {
+    display: none;
+    background: #e8f5e0;
+    border: 1.5px solid #90c870;
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .success-icon { font-size: 48px; margin-bottom: 12px; }
+  .success-title { font-size: 18px; font-weight: 900; color: #3a6020; margin-bottom: 8px; }
+  .success-text { font-size: 13px; color: #5a8040; line-height: 1.7; }
+
+  /* Loading */
+  .loading-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .loading-overlay.show { display: flex; }
+  .loading-spinner {
+    width: 48px; height: 48px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: #fff; font-size: 14px; font-weight: 700; }
+
+  .hint { font-size: 11px; color: var(--subtext); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <div class="top-bar-brand">FlyLight Travel Lab</div>
+    <div class="top-bar-sub">開票登記系統</div>
+  </div>
+  <div style="font-size:20px;">✈️</div>
+</div>
+
+<div class="content">
+
+  <!-- 行程資訊 -->
+  <div class="card">
+    <div class="card-title">✈️ 行程資訊</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="form-field">
+          <div class="form-label">專案編號</div>
+          <input class="form-input" id="projectNo" type="text" placeholder="例：0903A澳門新濠">
+        </div>
+        <div class="form-field">
+          <div class="form-label">艙等</div>
+          <select class="form-select" id="cabinClass">
+            <option value="">請選擇</option>
+            <option value="經濟艙">經濟艙</option>
+            <option value="商務艙">商務艙</option>
+            <option value="頭等艙">頭等艙</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <div class="form-label">出發地</div>
+          <input class="form-input" id="departure" type="text" placeholder="例：台北 TPE">
+        </div>
+        <div class="form-field">
+          <div class="form-label">目的地</div>
+          <input class="form-input" id="destination" type="text" placeholder="例：東京 NRT">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <div class="form-label">出發日期</div>
+          <input class="form-input" id="departDate" type="date">
+        </div>
+        <div class="form-field">
+          <div class="form-label">回程日期</div>
+          <input class="form-input" id="returnDate" type="date">
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="form-label">去程航班編號（最多三個）</div>
+        <div style="display:flex; gap:8px;">
+          <input class="form-input" id="flightNoDepart1" type="text" placeholder="第1選擇">
+          <input class="form-input" id="flightNoDepart2" type="text" placeholder="第2選擇">
+          <input class="form-input" id="flightNoDepart3" type="text" placeholder="第3選擇">
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="form-label">回程航班編號（最多三個）</div>
+        <div style="display:flex; gap:8px;">
+          <input class="form-input" id="flightNoReturn1" type="text" placeholder="第1選擇">
+          <input class="form-input" id="flightNoReturn2" type="text" placeholder="第2選擇">
+          <input class="form-input" id="flightNoReturn3" type="text" placeholder="第3選擇">
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="form-label">負責業務編號</div>
+        <input class="form-input" id="agentNo" type="text" placeholder="例：A001">
+      </div>
+    </div>
+  </div>
+
+  <!-- 聯絡資訊 -->
+  <div class="card">
+    <div class="card-title">📞 訂購人聯絡資訊</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="form-field">
+          <div class="form-label">姓名</div>
+          <input class="form-input" id="contactName" type="text" placeholder="訂購人姓名">
+        </div>
+        <div class="form-field">
+          <div class="form-label">手機號碼</div>
+          <input class="form-input" id="contactPhone" type="tel" placeholder="09xxxxxxxx">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <div class="form-label">LINE ID</div>
+          <input class="form-input" id="contactLine" type="text" placeholder="LINE ID">
+        </div>
+        <div class="form-field">
+          <div class="form-label">LINE 名稱</div>
+          <input class="form-input" id="contactLineName" type="text" placeholder="LINE 顯示名稱">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 旅客護照 -->
+  <div class="card">
+    <div class="card-title">🛂 旅客護照資訊</div>
+    <div id="passengerList"></div>
+    <button class="add-passenger-btn" onclick="addPassenger()">＋ 新增旅客</button>
+  </div>
+
+  <!-- 提交 -->
+  <button class="submit-btn" onclick="submitForm()">✅ 送出開票登記</button>
+
+  <!-- 成功訊息 -->
+  <div class="success-msg" id="successMsg">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">登記成功！</div>
+    <div class="success-text">開票資訊已送出<br>我們會盡快處理並聯繫您<br>電子機票將於出發前兩週至前一天 18:00 前發送</div>
+  </div>
+
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">處理中...</div>
+</div>
+
+<script>
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDHoZ5Xay9zyQ02mVvo5ASPu4ETz2xW7b8",
+  authDomain: "flylight-tracker.firebaseapp.com",
+  databaseURL: "https://flylight-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "flylight-tracker",
+  storageBucket: "flylight-tracker.firebasestorage.app",
+  messagingSenderId: "698660112747",
+  appId: "1:698660112747:web:d48113d1f48ee2f674e42e"
+};
+
+let db = null;
+async function initFirebase() {
+  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const { getDatabase, ref, push } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+  window._firebasePush = push;
+  window._firebaseRef = ref;
+  const app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+}
+initFirebase();
+
+const VISION_API_KEY = 'AIzaSyC2z9aUdABqdxJElzJI8xDEX10QMcLtjho';
+
+let passengers = [];
+let passengerCount = 0;
+
+function renderPassengers() {
+  const list = document.getElementById('passengerList');
+  if (passengers.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--subtext);font-size:12px;padding:12px 0;">請新增旅客 👇</div>';
+    return;
+  }
+  list.innerHTML = passengers.map((p, i) => `
+    <div class="passenger-card" id="passenger-${p.id}">
+      <div class="passenger-header">
+        <div class="passenger-title">旅客 ${i + 1}</div>
+        <button class="remove-btn" onclick="window._removePassenger(${p.id})">🗑</button>
+      </div>
+      <div class="passport-upload" id="upload-${p.id}" onclick="document.getElementById('input-${p.id}').click()">
+        <img id="preview-${p.id}" src="" style="width:100%;border-radius:10px;margin-bottom:12px;display:none;max-height:160px;object-fit:cover;">
+        <div id="upload-hint-${p.id}">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text"><strong>點擊上傳護照照片</strong><br>支援拍照或選擇檔案</div>
+        </div>
+      </div>
+      <input type="file" id="input-${p.id}" accept="image/*" capture="environment" onchange="window._handlePassportUpload(${p.id}, this)">
+      <button class="ocr-btn" id="ocr-btn-${p.id}" onclick="window._runOCR(${p.id})">🔍 自動辨識護照資料</button>
+      <div class="ocr-result" id="ocr-result-${p.id}"></div>
+      <div class="form-grid" style="margin-top:14px;">
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-label">英文姓名（護照上）</div>
+            <input class="form-input" id="name-en-${p.id}" type="text" placeholder="SURNAME GIVEN NAME">
+          </div>
+          <div class="form-field">
+            <div class="form-label">中文姓名</div>
+            <input class="form-input" id="name-zh-${p.id}" type="text" placeholder="中文姓名">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-label">護照號碼</div>
+            <input class="form-input" id="passport-no-${p.id}" type="text" placeholder="護照號碼">
+          </div>
+          <div class="form-field">
+            <div class="form-label">國籍</div>
+            <input class="form-input" id="nationality-${p.id}" type="text" placeholder="TWN">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-label">出生日期</div>
+            <input class="form-input" id="dob-${p.id}" type="date">
+          </div>
+          <div class="form-field">
+            <div class="form-label">護照效期</div>
+            <input class="form-input" id="expiry-${p.id}" type="date">
+          </div>
+        </div>
+        <div class="form-field">
+          <div class="form-label">性別</div>
+          <select class="form-select" id="gender-${p.id}">
+            <option value="">請選擇</option>
+            <option value="M">男 M</option>
+            <option value="F">女 F</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window._removePassenger = function(id) {
+  passengers = passengers.filter(p => p.id !== id);
+  renderPassengers();
+}
+
+window._handlePassportUpload = function(id, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById(`preview-${id}`);
+    const hint = document.getElementById(`upload-hint-${id}`);
+    const ocrBtn = document.getElementById(`ocr-btn-${id}`);
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    hint.style.display = 'none';
+    ocrBtn.style.display = 'block';
+    const p = passengers.find(p => p.id === id);
+    if (p) p.imageBase64 = e.target.result.split(',')[1];
+  };
+  reader.readAsDataURL(file);
+}
+
+window._runOCR = async function(id) {
+  const p = passengers.find(p => p.id === id);
+  if (!p || !p.imageBase64) return;
+  const btn = document.getElementById(`ocr-btn-${id}`);
+  const result = document.getElementById(`ocr-result-${id}`);
+  btn.textContent = '辨識中...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{ image: { content: p.imageBase64 }, features: [{ type: 'TEXT_DETECTION', maxResults: 1 }] }]
+      })
+    });
+    const data = await res.json();
+    const text = data.responses?.[0]?.fullTextAnnotation?.text || '';
+    const parsed = parseMRZ(text);
+    if (parsed) {
+      if (parsed.surname) { document.getElementById(`name-en-${id}`).value = `${parsed.surname} ${parsed.given}`; document.getElementById(`name-en-${id}`).classList.add('auto-filled'); }
+      if (parsed.passportNo) { document.getElementById(`passport-no-${id}`).value = parsed.passportNo; document.getElementById(`passport-no-${id}`).classList.add('auto-filled'); }
+      if (parsed.nationality) { document.getElementById(`nationality-${id}`).value = parsed.nationality; document.getElementById(`nationality-${id}`).classList.add('auto-filled'); }
+      if (parsed.dob) { document.getElementById(`dob-${id}`).value = parsed.dob; document.getElementById(`dob-${id}`).classList.add('auto-filled'); }
+      if (parsed.expiry) { document.getElementById(`expiry-${id}`).value = parsed.expiry; document.getElementById(`expiry-${id}`).classList.add('auto-filled'); }
+      if (parsed.gender) document.getElementById(`gender-${id}`).value = parsed.gender;
+      result.style.display = 'block';
+      result.style.background = '#f0f8e8';
+      result.style.borderColor = '#90c870';
+      result.style.color = '#3a6020';
+      result.innerHTML = '✅ 辨識成功！資料已自動填入，請確認是否正確。';
+    } else {
+      result.style.display = 'block';
+      result.style.background = '#fce8e6';
+      result.style.borderColor = '#f0b0a0';
+      result.style.color = '#c84030';
+      result.innerHTML = '⚠️ 無法自動辨識，請手動填寫護照資料。';
+    }
+  } catch(e) {
+    result.style.display = 'block';
+    result.style.background = '#fce8e6';
+    result.style.borderColor = '#f0b0a0';
+    result.style.color = '#c84030';
+    result.innerHTML = '⚠️ 辨識失敗，請手動填寫。';
+  }
+  btn.textContent = '🔍 重新辨識';
+  btn.disabled = false;
+}
+
+function parseMRZ(text) {
+  const lines = text.split('\n').map(l => l.replace(/\s/g, '').toUpperCase());
+  let mrz1 = '', mrz2 = '';
+  for (const line of lines) {
+    if (line.startsWith('P<') && line.length >= 40) mrz1 = line;
+    if (/^[A-Z0-9<]{9}[0-9]/.test(line) && line.length >= 40) mrz2 = line;
+  }
+  if (!mrz1 || !mrz2) return null;
+  try {
+    const namePart = mrz1.substring(5).split('<<');
+    const surname = namePart[0]?.replace(/</g, ' ').trim() || '';
+    const given = namePart[1]?.replace(/</g, ' ').trim() || '';
+    const passportNo = mrz2.substring(0, 9).replace(/</g, '');
+    const nationality = mrz2.substring(10, 13).replace(/</g, '');
+    const dobRaw = mrz2.substring(13, 19);
+    const gender = mrz2.substring(20, 21);
+    const expiryRaw = mrz2.substring(21, 27);
+    const parseDateMRZ = (str, isFuture) => {
+      const yy = str.substring(0, 2), mm = str.substring(2, 4), dd = str.substring(4, 6);
+      const year = isFuture ? (parseInt(yy) < 50 ? `20${yy}` : `19${yy}`) : (parseInt(yy) > 24 ? `19${yy}` : `20${yy}`);
+      return `${year}-${mm}-${dd}`;
+    };
+    return { surname, given, passportNo, nationality, dob: parseDateMRZ(dobRaw, false), expiry: parseDateMRZ(expiryRaw, true), gender: gender === 'M' ? 'M' : gender === 'F' ? 'F' : '' };
+  } catch(e) { return null; }
+}
+
+window.addPassenger = function() {
+  passengerCount++;
+  const id = Date.now();
+  passengers.push({ id, index: passengerCount });
+  renderPassengers();
+}
+
+window.submitForm = async function() {
+  const projectNo = document.getElementById('projectNo').value.trim();
+  const contactName = document.getElementById('contactName').value.trim();
+  const contactPhone = document.getElementById('contactPhone').value.trim();
+  const departure = document.getElementById('departure').value.trim();
+  const destination = document.getElementById('destination').value.trim();
+  const departDate = document.getElementById('departDate').value;
+  const cabinClass = document.getElementById('cabinClass').value;
+
+  if (!contactName || !contactPhone || !departure || !destination || !departDate || !cabinClass) { alert('請填寫所有必填欄位！'); return; }
+  if (passengers.length === 0) { alert('請至少新增一位旅客！'); return; }
+
+  showLoading('送出登記中...');
+
+  const passengerData = passengers.map((p, i) => ({
+    index: i + 1,
+    nameZh: document.getElementById(`name-zh-${p.id}`)?.value || '',
+    nameEn: document.getElementById(`name-en-${p.id}`)?.value || '',
+    dob: document.getElementById(`dob-${p.id}`)?.value || '',
+    passportNo: document.getElementById(`passport-no-${p.id}`)?.value || '',
+    expiry: document.getElementById(`expiry-${p.id}`)?.value || '',
+  }));
+
+  const record = {
+    timestamp: new Date().toISOString(),
+    projectNo,
+    agentNo: document.getElementById('agentNo').value,
+    contactName,
+    contactPhone,
+    contactLine: document.getElementById('contactLine').value,
+    contactLineName: document.getElementById('contactLineName').value,
+    departure,
+    destination,
+    departDate,
+    returnDate: document.getElementById('returnDate').value,
+    flightNoDepart: [document.getElementById('flightNoDepart1').value, document.getElementById('flightNoDepart2').value, document.getElementById('flightNoDepart3').value].filter(v => v),
+    flightNoReturn: [document.getElementById('flightNoReturn1').value, document.getElementById('flightNoReturn2').value, document.getElementById('flightNoReturn3').value].filter(v => v),
+    cabinClass,
+    passengers: passengerData,
+    passengerCount: passengers.length,
+  };
+
+  try {
+    await window._firebasePush(window._firebaseRef(db, 'registrations'), record);
+
+    const lineMsg = `✈️ 新開票登記\n━━━━━━━━━━━━━\n📋 專案：${projectNo || '未填'}\n🧑‍💼 負責業務：${record.agentNo || '未填'}\n👤 訂購人：${contactName}\n📱 電話：${contactPhone}\n💬 LINE ID：${record.contactLine || '未填'}\n💬 LINE 名稱：${record.contactLineName || '未填'}\n🛫 ${departure} → ${destination}\n📅 去程：${departDate}　航班：${record.flightNoDepart.join(' / ') || '未填'}\n📅 回程：${record.returnDate || '未填'}　航班：${record.flightNoReturn.join(' / ') || '未填'}\n💺 艙等：${cabinClass}\n👥 旅客數：${passengers.length} 人\n\n旅客：\n${passengerData.map(p => `${p.index}. ${p.nameZh || ''} ${p.nameEn || '未填'} | 生日：${p.dob || '未填'} | 護照：${p.passportNo || '未填'} | 效期：${p.expiry || '未填'}`).join('\n')}`;
+
+    await fetch('https://ticket-api-kohl.vercel.app/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: lineMsg })
+    });
+
+    hideLoading();
+    document.getElementById('successMsg').style.display = 'block';
+    document.querySelector('.submit-btn').style.display = 'none';
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  } catch(e) {
+    hideLoading();
+    alert('送出失敗，請稍後再試！');
+  }
+}
+
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+renderPassengers();
+addPassenger();
+</script>
+</body>
+</html>
