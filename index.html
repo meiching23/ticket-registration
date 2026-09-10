@@ -29,6 +29,7 @@
     background: var(--bg);
     min-height: 100vh;
     padding: 0 0 40px;
+    overflow-x: hidden;
   }
 
   .top-bar {
@@ -45,7 +46,7 @@
   .top-bar-brand { color: #fff8ee; font-size: 15px; font-weight: 900; letter-spacing: 1px; }
   .top-bar-sub { color: rgba(255,248,238,0.6); font-size: 10px; }
 
-  .content { padding: 20px; max-width: 640px; margin: 0 auto; }
+  .content { padding: 20px; max-width: 640px; margin: 0 auto; width: 100%; }
 
   .card {
     background: var(--cream);
@@ -53,6 +54,8 @@
     padding: 22px;
     margin-bottom: 16px;
     border: 1.5px solid var(--light-brown);
+    width: 100%;
+    overflow: hidden;
   }
 
   .card-title {
@@ -302,7 +305,7 @@
       </div>
       <div class="form-field">
         <div class="form-label">去程航班編號（最多三個）</div>
-        <div class="flight-row" style="display:flex; gap:8px;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
           <input class="form-input" id="flightNoDepart1" type="text" placeholder="第1選擇">
           <input class="form-input" id="flightNoDepart2" type="text" placeholder="第2選擇">
           <input class="form-input" id="flightNoDepart3" type="text" placeholder="第3選擇">
@@ -310,7 +313,7 @@
       </div>
       <div class="form-field">
         <div class="form-label">回程航班編號（最多三個）</div>
-        <div class="flight-row" style="display:flex; gap:8px;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
           <input class="form-input" id="flightNoReturn1" type="text" placeholder="第1選擇">
           <input class="form-input" id="flightNoReturn2" type="text" placeholder="第2選擇">
           <input class="form-input" id="flightNoReturn3" type="text" placeholder="第3選擇">
