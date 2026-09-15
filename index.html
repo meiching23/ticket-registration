@@ -322,10 +322,17 @@
         <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
           <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;" onclick="toggleAlert('china')">
             <input type="checkbox" id="checkChina" style="width:18px;height:18px;margin-top:2px;accent-color:#c87830;flex-shrink:0;">
-            <span style="font-size:13px; color:#3a2008;">前往 / 轉機 <strong>中國大陸</strong></span>
+            <span style="font-size:13px; color:#3a2008;">前往 <strong>中國大陸</strong>（目的地）</span>
           </label>
           <div id="alertChina" style="display:none;" class="form-alert">
             🇨🇳 前往中國大陸者，訂票<strong>只能使用台胞證</strong>，護照無法辦理，請務必提供台胞證資料，否則無法完成訂票作業。
+          </div>
+          <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;" onclick="toggleAlert('chinaTransit')">
+            <input type="checkbox" id="checkChinaTransit" style="width:18px;height:18px;margin-top:2px;accent-color:#c87830;flex-shrink:0;">
+            <span style="font-size:13px; color:#3a2008;">轉機 <strong>中國大陸</strong></span>
+          </label>
+          <div id="alertChinaTransit" style="display:none;" class="form-alert">
+            🇨🇳 轉機中國大陸者，訂票使用<strong>護照</strong>即可，但辦理登機及轉機手續時<strong>必須持有有效台胞證（5年期）</strong>，沒有台胞證有被拒絕登機的風險，請務必提前備妥。
           </div>
           <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;" onclick="toggleAlert('hk')">
             <input type="checkbox" id="checkHK" style="width:18px;height:18px;margin-top:2px;accent-color:#c87830;flex-shrink:0;">
@@ -705,9 +712,11 @@ window.toggleAlert = function(type) {
     if (type === 'china') {
       const checked = document.getElementById('checkChina').checked;
       document.getElementById('alertChina').style.display = checked ? 'block' : 'none';
-      // 切換旅客區塊
       window._chinaMode = checked;
       renderPassengers();
+    } else if (type === 'chinaTransit') {
+      const checked = document.getElementById('checkChinaTransit').checked;
+      document.getElementById('alertChinaTransit').style.display = checked ? 'block' : 'none';
     } else if (type === 'hk') {
       const checked = document.getElementById('checkHK').checked;
       document.getElementById('alertHK').style.display = checked ? 'block' : 'none';
