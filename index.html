@@ -250,6 +250,19 @@
 
   .hint { font-size: 11px; color: var(--subtext); margin-top: 4px; }
 
+  .form-alert {
+    background: #fff8ee;
+    border: 1.5px solid #e8c898;
+    border-left: 4px solid #c87830;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #7a4a10;
+    line-height: 1.7;
+    margin-top: 2px;
+  }
+  .form-alert strong { color: #a06018; }
+
   /* 手機 RWD */
   @media (max-width: 480px) {
     .content { padding: 12px; }
@@ -300,6 +313,27 @@
         <div class="form-field">
           <div class="form-label">目的地</div>
           <input class="form-input" id="destination" type="text" placeholder="例：東京 NRT">
+        </div>
+      </div>
+
+      <!-- 中國/香港勾選 -->
+      <div class="form-field">
+        <div class="form-label">目的地是否含以下地區？</div>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+          <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;" onclick="toggleAlert('china')">
+            <input type="checkbox" id="checkChina" style="width:18px;height:18px;margin-top:2px;accent-color:#c87830;flex-shrink:0;">
+            <span style="font-size:13px; color:#3a2008;">前往 / 轉機 <strong>中國大陸</strong></span>
+          </label>
+          <div id="alertChina" style="display:none;" class="form-alert">
+            🇨🇳 前往中國大陸者，訂票<strong>只能使用台胞證</strong>，護照無法辦理，請務必提供台胞證資料，否則無法完成訂票作業。
+          </div>
+          <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;" onclick="toggleAlert('hk')">
+            <input type="checkbox" id="checkHK" style="width:18px;height:18px;margin-top:2px;accent-color:#c87830;flex-shrink:0;">
+            <span style="font-size:13px; color:#3a2008;">前往 / 轉機 <strong>香港</strong></span>
+          </label>
+          <div id="alertHK" style="display:none;" class="form-alert">
+            🇭🇰 前往香港者，訂票使用<strong>護照</strong>即可。入境時請備妥<strong>港簽</strong>或<strong>台胞證</strong>擇一出示，建議提前申請電子港簽（免費，約 10 分鐘），需列印 A4 紙本攜帶，不可用手機出示。
+          </div>
         </div>
       </div>
       <div class="form-row">
@@ -462,12 +496,42 @@ function renderPassengers() {
         <img id="preview-${p.id}" src="" style="width:100%;border-radius:10px;margin-bottom:12px;display:none;max-height:160px;object-fit:cover;">
         <div id="upload-hint-${p.id}">
           <div class="upload-icon">📷</div>
-          <div class="upload-text"><strong>點擊上傳護照照片</strong><br>支援拍照或選擇檔案</div>
+          <div class="upload-text"><strong>${window._chinaMode ? '點擊上傳台胞證照片' : '點擊上傳護照照片'}</strong><br>支援拍照或選擇檔案</div>
         </div>
       </div>
       <input type="file" id="input-${p.id}" accept="image/*" onchange="window._handlePassportUpload(${p.id}, this)">
-      <button class="ocr-btn" id="ocr-btn-${p.id}" onclick="window._runOCR(${p.id})">🔍 自動辨識護照資料</button>
+      <button class="ocr-btn" id="ocr-btn-${p.id}" onclick="window._runOCR(${p.id})">🔍 ${window._chinaMode ? '自動辨識台胞證資料' : '自動辨識護照資料'}</button>
       <div class="ocr-result" id="ocr-result-${p.id}"></div>
+      ${window._chinaMode ? `
+      <div class="form-grid" style="margin-top:14px;">
+        <div class="china-notice" style="background:#fff8ee;border:1.5px solid #e8c898;border-left:4px solid #c87830;border-radius:10px;padding:10px 14px;font-size:12px;color:#7a4a10;margin-bottom:4px;">
+          🇨🇳 前往中國大陸，請填寫<strong>台胞證</strong>資料
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-label">中文姓名</div>
+            <input class="form-input" id="name-zh-${p.id}" type="text" placeholder="中文姓名">
+          </div>
+          <div class="form-field">
+            <div class="form-label">英文姓名</div>
+            <input class="form-input" id="name-en-${p.id}" type="text" placeholder="SURNAME GIVEN NAME">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <div class="form-label">出生日期</div>
+            <input class="form-input" id="dob-${p.id}" type="date">
+          </div>
+          <div class="form-field">
+            <div class="form-label">台胞證號碼</div>
+            <input class="form-input" id="passport-no-${p.id}" type="text" placeholder="台胞證號碼">
+          </div>
+        </div>
+        <div class="form-field">
+          <div class="form-label">台胞證效期</div>
+          <input class="form-input" id="expiry-${p.id}" type="date">
+        </div>
+      </div>` : `
       <div class="form-grid" style="margin-top:14px;">
         <div class="form-row">
           <div class="form-field">
@@ -493,7 +557,7 @@ function renderPassengers() {
           <div class="form-label">護照效期</div>
           <input class="form-input" id="expiry-${p.id}" type="date">
         </div>
-      </div>
+      </div>`}
     </div>
   `).join('');
 
@@ -634,6 +698,21 @@ function parseMRZ(text) {
   }
 
   return hasAny ? result : null;
+}
+
+window.toggleAlert = function(type) {
+  setTimeout(() => {
+    if (type === 'china') {
+      const checked = document.getElementById('checkChina').checked;
+      document.getElementById('alertChina').style.display = checked ? 'block' : 'none';
+      // 切換旅客區塊
+      window._chinaMode = checked;
+      renderPassengers();
+    } else if (type === 'hk') {
+      const checked = document.getElementById('checkHK').checked;
+      document.getElementById('alertHK').style.display = checked ? 'block' : 'none';
+    }
+  }, 0);
 }
 
 window.addPassenger = function() {
