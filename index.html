@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
   // 自動清除快取，確保永遠是最新版
-  const VERSION = '5';
+  const VERSION = '6';
   const url = new URL(window.location.href);
   if (url.searchParams.get('v') !== VERSION) {
     url.searchParams.set('v', VERSION);
@@ -380,8 +380,15 @@
         </div>
       </div>
       <div class="form-field">
-        <div class="form-label">負責業務編號</div>
-        <input class="form-input" id="agentNo" type="text" placeholder="例：A001">
+        <div class="form-label">負責業務編號 <span style="color:var(--error);">*必選</span></div>
+        <select class="form-select" id="agentNo">
+          <option value="">請選擇負責業務</option>
+          <option value="A238">A238</option>
+          <option value="S999">S999</option>
+          <option value="J168">J168</option>
+          <option value="A118">A118</option>
+          <option value="H248">H248</option>
+        </select>
       </div>
       <div class="form-field">
         <div class="form-label">備註</div>
@@ -741,6 +748,8 @@ window.submitForm = async function() {
   const departDate = document.getElementById('departDate').value;
   const cabinClass = document.getElementById('cabinClass').value;
 
+  const agentNo = document.getElementById('agentNo').value;
+  if (!agentNo) { alert('請選擇負責業務！'); return; }
   if (!contactName || !contactPhone || !departure || !destination || !departDate || !cabinClass) { alert('請填寫所有必填欄位！'); return; }
   if (passengers.length === 0) { alert('請至少新增一位旅客！'); return; }
 
