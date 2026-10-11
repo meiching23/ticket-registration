@@ -765,6 +765,7 @@ window.submitForm = async function() {
   }));
 
   const record = {
+    type: 'registration',
     timestamp: new Date().toISOString(),
     projectNo,
     agentNo: document.getElementById('agentNo').value,
